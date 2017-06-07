@@ -111,7 +111,6 @@ def get_master_equation(H, G, tau):
     linbladian = unitary_term.copy() * 0
     for i in range(len(G)):
         linbladian += tau[i] * lindbladian_vectorized(G[i])
-    print(linbladian)
     return unitary_term + linbladian
 
 
