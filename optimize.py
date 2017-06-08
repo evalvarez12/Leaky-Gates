@@ -1,5 +1,6 @@
 import scipy as scipy
 import scipy.optimize as optimize
+from eduardo import *
 
 def cost_func(x, P, U_evolution, U_target):
     """
@@ -14,16 +15,29 @@ def cost_func(x, P, U_evolution, U_target):
     theta2 = x[1]
     theta3 = x[2]
     unitary_product_phase = matrix_optimize(theta1, theta2, theta3)
-    
+
     projected_U_evolution = P*U_evolution*P.dag()
     projected_unitary_phase = P*unitary_product_phase*P.dag()
     unitary = projected_unitary_phase*projected_U_evolution
     F = Fidelity(U_target, unitary)
     infidelity = 1- F
     return infidelity
-    
 
+coupling = 0.3
+omega = .5
+delta = .5
+
+evolution_time = np.pi/(2*coupling)
+H = H_coupled_qutrit(.5, .5, .5, .5, coupling)
+# print(H)
+U_evolution = (-1j * H * evolution_time).expm()
+# print(U_evolution)
+
+P = proyector()
+P = qtp.tensor(P, P)
 U_target = target_iSWAP()
+
+
 #optimizer
 
 #anonymous call, vary only x
@@ -32,3 +46,9 @@ infidelity = lambda x: cost_func(x, P = P, U_evolution = U_evolution, U_target =
 bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
 x0 = [np.pi,np.pi,0]
 res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead',bounds=bnds, tol= 1e-10)
+
+#check
+x1, x2, x3 = res.x
+ZZ = matrix_optimize(x1, x2, x3)
+U_qubit = P * ZZ * U_evolution * P.dag()
+print(Fidelity(U_target, U_qubit))
