@@ -36,8 +36,8 @@ g = [set_single_2qutrit_gate(gz, 0), set_single_2qutrit_gate(gz, 1),
      set_single_2qutrit_gate(gx1, 0), set_single_2qutrit_gate(gx1, 1),
      set_single_2qutrit_gate(gx2, 0), set_single_2qutrit_gate(gx2, 1)]
 
-tau = [.05, .05, .05, .05, .05, .05]
-# tau = [0, 0, 0, 0, 0, 0]
+# tau = [.05, .05, .05, .05, .05, .05]
+tau = [0, 0, 0, 0, 0, 0]
 
 G_evolution_master  = get_master_equation(H, g, tau)
 # print(G_evolution_master)

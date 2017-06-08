@@ -121,7 +121,7 @@ def get_master_equation(H, G, tau):
     #todo: vecorized or not
     #function for rho
     unitary_term = unitary_evolution_vectorized(H)
-    linbladian = unitary_term.copy() * 0
+    linbladian = unitary_term * 0
     for i in range(len(G)):
         linbladian += tau[i] * lindbladian_vectorized(G[i])
     return unitary_term + linbladian
