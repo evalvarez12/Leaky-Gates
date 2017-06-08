@@ -75,9 +75,31 @@ class Optimizer:
     def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
         U = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
         return self._minimize(U)
+    def get_trace_distance(self, rho_sim, rho_target):
 
+        #rho_sim is reshaped density matrix
+        #todo: Put the density matrix argument 
+        #calculates the trace distance between target..
+        #..density matrix and materequation density matrix
+        m, n = rho_sim.shape
+        rho_sim = rho_sim.reshape(np.sqrt(m*n),np.sqrt(m*n))
+        l,j = rho_target.shape
+        rho_target = rho_target.reshape(np.sqrt(m*n),np.sqrt(m*n))
 
-
+        trace_distance = qtp.tracedist(rho_sim, rho_target, sparse=False, tol=0)
+        return trace_distance
+    def cost_trace_distance(self, x, rho_sim, rho_target):
+        #calculates a cost function based on the trace distance
+        #of calculated density matrix from target density matrix
+        theta1 = x[0]
+        theta2 = x[1]
+        theta3 = x[2]
+        m, n = rho_sim.shape
+        rho_sim = rho_sim.reshape(np.sqrt(m*n),np.sqrt(m*n))
+        unitary_product_phase = operations.matrix_optimize(theta1, theta2, theta3)
+        rho_parametric = unitary_product_phase*rho_sim*unitary_product_phase.dag()
+        cost_trace_distance = get_trace_distance(self, rho_parametric, rho_target)
+        return cost_trace_distance
 coupling = 0.3
 omega = .5
 delta = .5
