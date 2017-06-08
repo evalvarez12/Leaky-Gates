@@ -111,18 +111,18 @@ def qutrit_to_qubit_noDimRed(U_evolution):
 
 
 def vectorize_operator(X):
-    matrix = X.full()
+    matrix = X
     m, n = matrix.shape
     vec = matrix.reshape(m*n)
-    return qtp.Qobj(vec)
+    return vec
 
 def un_vectorize(X):
     # Only works on ket
-    vector = X.full()
+    vector = X
     m = vector.shape[0]
     m = int(np.sqrt(m))
     matrix = vector.reshape(m, m)
-    return qtp.Qobj(matrix)
+    return matrix
 
 
 def unitary_evolution_vectorized(H):
@@ -176,3 +176,17 @@ def set_single_2qutrit_gate(X, pos):
         return qtp.tensor(X, qtp.qeye(d))
     if pos == 1:
         return qtp.tensor(qtp.qeye(d), X)
+
+
+def trace_dist(A,B):
+    diff = A-B
+    diff = np.transpose(np.conj(diff)).dot(diff)
+    vals, _ = np.linalg.eig(diff)
+    return float(np.real(0.5 * np.sum(np.sqrt(np.abs(vals)))))
+
+
+def special_state():
+    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
+    s = qtp.tensor(ket0,ket0) + qtp.tensor(ket0,ket1) + qtp.tensor(ket1,ket0) + qtp.tensor(ket1,ket1)
+    s = s/2
+    return s * s.dag()
