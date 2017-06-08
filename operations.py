@@ -40,6 +40,12 @@ def target_iSWAP():
         - 1j*qtp.tensor(ket1, ket0)*qtp.tensor(bra0, bra1) + qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
     return A
 
+def target_iSWAP_master():
+    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
+    A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - 1j*qtp.tensor(ket0, ket1)*qtp.tensor(bra1, bra0) \
+        - 1j*qtp.tensor(ket1, ket0)*qtp.tensor(bra0, bra1) + qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
+    return qtp.tensor(A, A)
+
 def target_CNOT():
     ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) + qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
@@ -117,6 +123,18 @@ def unitary_evolution_vectorized(H):
     b = qtp.tensor(qtp.qeye(d), H)
     return -1j*(a - b)
 
+
+def operators():
+    w = np.exp(1j*np.pi/3.)
+    gz = qtp.Qobj(np.array([[1, 0, 0], [0, w, 0], [0, 0, w**2]]))
+    gx1 = qtp.Qobj(np.array([[0, 1, 0], [1, 0, 0], [0, 0, 1]]))
+    gx2 = qtp.Qobj(np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]]))
+
+
+    g = [set_single_2qutrit_gate(gz, 0), set_single_2qutrit_gate(gz, 1),
+         set_single_2qutrit_gate(gx1, 0), set_single_2qutrit_gate(gx1, 1),
+         set_single_2qutrit_gate(gx2, 0), set_single_2qutrit_gate(gx2, 1)]
+    return g
 
 def lindbladian_vectorized(A):
     #takes operator as an input upgrades it to a lindblad

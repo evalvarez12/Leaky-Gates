@@ -8,14 +8,17 @@ class Optimizer:
     def __init__(self, target, evolution_time, master=False):
             self.Target = target
             self.evolution_time = evolution_time
+            self.master = master
             if master:
-                print("HRere")
                 d = target.dims[0]
                 self.P = qtp.qeye(d)
             else:
                 self.P = operations.projector_2qutrit()
 
 
+
+    def set_master_tau(self, tau):
+        self.tau = tau
 
     def _cost_func(self, x, U_evolution):
         """
@@ -31,6 +34,9 @@ class Optimizer:
         theta3 = x[2]
         unitary_product_phase = operations.matrix_optimize(theta1, theta2, theta3)
 
+        if self.master:
+            unitary_product_phase = qtp.tensor(unitary_product_phase, unitary_product_phase)
+
         projected_U_evolution = self.P*U_evolution*self.P.dag()
         projected_unitary_phase = self.P*unitary_product_phase*self.P.dag()
         unitary = projected_unitary_phase*projected_U_evolution
@@ -41,8 +47,14 @@ class Optimizer:
     def _get_evolution(self, freq1, anh1, freq2, anh2, coupling):
         evolution_time = self.evolution_time/coupling
         H = operations.H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling)
-        U_evolution = (-1j * H * evolution_time).expm()
-        return U_evolution
+        if self.master:
+            g = operations.operators()
+            G_evolution_master  = operations.get_master_equation(H, g, self.tau)
+            U_evolution_master = ( G_evolution_master * evolution_time).expm()
+            return U_evolution_master
+        else:
+            U_evolution = (-1j * H * evolution_time).expm()
+            return U_evolution
 
     def _minimize(self, U_evolution):
         infidelity = lambda x: self._cost_func(x, U_evolution = U_evolution)
@@ -54,6 +66,8 @@ class Optimizer:
         #check
         x1, x2, x3 = res.x
         ZZ = operations.matrix_optimize(x1, x2, x3)
+        if self.master:
+            ZZ = qtp.tensor(ZZ, ZZ.dag())
         U_qubit = self.P * ZZ * U_evolution * self.P.dag()
         # print(Fidelity(U_target, U_qubit))
         return operations.Fidelity(self.Target, U_qubit)
@@ -71,6 +85,15 @@ target = operations.target_iSWAP()
 optimizer = Optimizer(target, np.pi/2.)
 print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
 
+print("USING MASTER")
+
+coupling = 0.3
+omega = .5
+delta = .5
+target = operations.target_iSWAP_master()
+optimizer = Optimizer(target, np.pi/2., master=True)
+optimizer.set_master_tau([0, 0, 0, 0, 0, 0])
+print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
 
 #
 # evolution_time = np.pi/(2*coupling)
