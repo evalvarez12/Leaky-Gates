@@ -30,6 +30,7 @@ def proyector():
     P = bitKet0*triBra0 + bitKet1*triBra1
     return P
 
+# def sigmaz_qutriz(position):
 
 
 def H_single(freq1, anh1):
@@ -52,6 +53,10 @@ def H_coupling(coupling):
     return coupling*(term1 + term2)
 
 
+def Fidelity(U_target, U):
+    d, _ = U_target.shape
+    f = (U - U_target).norm()/d
+    return 1 - f**2
 
 def H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling):
     """
