@@ -30,6 +30,10 @@ def proyector():
     P = bitKet0*triBra0 + bitKet1*triBra1
     return P
 
+def proyector_2qutrit():
+    p = proyector()
+    return qtp.tensor(p, p)
+
 def target_iSWAP():
     ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - 1j*qtp.tensor(ket0, ket1)*qtp.tensor(bra1, bra0) \
