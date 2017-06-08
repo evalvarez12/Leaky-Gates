@@ -4,11 +4,15 @@ import operations
 import numpy as np
 
 class Optimizer:
-    def __init__(self, target="iSWAP"):
-        if target == "iSWAP":
-            self.Target = operations.target_iSWAP()
-            self.evolution_time = np.pi/2.
-            self.P = operations.proyector_2qutrit()
+    def __init__(self, target, evolution_time, project="True"):
+            self.Target = target
+            self.evolution_time = evolution_time
+            if project:
+                self.P = operations.projector_2qutrit()
+            else:
+                d = target.dims[0]
+                self.P = qtp.qeye(d)
+
 
 
     def _cost_func(self, x, U_evolution):
@@ -61,8 +65,8 @@ class Optimizer:
 coupling = 0.3
 omega = .5
 delta = .5
-
-optimizer = Optimizer("iSWAP")
+target = operations.target_iSWAP()
+optimizer = Optimizer(target, np.pi/2.)
 print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
 
 

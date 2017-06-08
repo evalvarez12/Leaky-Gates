@@ -24,14 +24,14 @@ def basis_qubit():
     bra1 = qtp.dag(ket1)
     return ket0, ket1, bra0, bra1
 
-def proyector():
+def projector():
     bitKet0, bitKet1, bitBra0, bitBra1 = basis_qubit()
     triKet0, triKet1, triKet2, triBra0, triBra1, triBra2 = basis_qutrit()
     P = bitKet0*triBra0 + bitKet1*triBra1
     return P
 
-def proyector_2qutrit():
-    p = proyector()
+def projector_2qutrit():
+    p = projector()
     return qtp.tensor(p, p)
 
 def target_iSWAP():
