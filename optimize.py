@@ -14,11 +14,11 @@ def cost_func(x, P, U_evolution, U_target):
     """
     theta1 = x[0]
     theta2 = x[1]
-    theta3 = x[3]
+    theta3 = x[2]
     unitary_product_phase = matrix_optimize(theta1, theta2, theta3)
     unitary = unitary_product_phase*U_evolution
     projected_unitary = P*unitary*P.dag()
-    F = fidelity(U_target, projected_unitary)
+    F = Fidelity(U_target, projected_unitary)
     infidelity = 1- F
     return infidelity
 
@@ -32,7 +32,8 @@ evolution_time = np.pi/(2*coupling)
 H = H_coupled_qutrit(.5, .5, .5, .5, coupling)
 # print(H)
 U_evolution = (-1j * H * evolution_time).expm()
-
+P = proyector()
+P = qtp.tensor(P, P)
 U_target = target_iSWAP()
 print(U_target)
 #anonymous call, vary only x
@@ -41,4 +42,4 @@ infidelity = lambda x: cost_func(x, P = P, U_evolution = U_evolution, U_target =
 #setup the constraints
 bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
 x0 = [0,0,0]
-res = scipy.optimize.minimize(infidelity, x0, method= 'BFGS',bounds=bnds, tol= 1e-1)
+res = scipy.optimize.minimize(infidelity, x0, method= 'BFGS',bounds=bnds, tol= 1e-5)

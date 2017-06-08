@@ -31,13 +31,13 @@ def proyector():
     return P
 
 def target_iSWAP():
-    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
+    ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - 1j*qtp.tensor(ket0, ket1)*qtp.tensor(bra1, bra0) \
         - 1j*qtp.tensor(ket1, ket0)*qtp.tensor(bra0, bra1) + qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
     return A
 
 def target_CNOT():
-    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
+    ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) + qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
         + qtp.tensor(ket1, ket0)*qtp.tensor(bra1, bra0) - qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
     return A
