@@ -7,7 +7,7 @@ import qutip as qtp
 class OptimizerM:
     def __init__(self, target, evolution_time):
             self.Target = target
-            print(target)
+            # print(target)
             self.evolution_time = evolution_time
             self.P = operations.projector_2qutrit()
 
@@ -24,7 +24,7 @@ class OptimizerM:
         this function calls fidelity and outputs 1-fidelity as a cost function
         this is fed into an optimizer
         """
-        print(x)
+        # print(x)
         theta1 = x[0]
         theta2 = x[1]
         theta3 = x[2]
@@ -51,12 +51,15 @@ class OptimizerM:
         # Do   U rho U+
         rho = ZZ.full().dot( state_evolved.dot( ZZ.dag().full()))
         rho = self.P.full().dot(rho.dot(self.P.dag().full()))
-        comparation = (self.Target * state * self.Target.dag())
-        comparation = (self.P * comparation * self.P.dag()).full()
+
+        comp = self.P *state * self.P.dag()
+        comparation = (self.Target * comp * self.Target.dag()).full()
+        # comparation = (self.Target * state * self.Target.dag())
+        # comparation = (self.P * comparation * self.P.dag()).full()
         # F = qtp.tracedist(rho, comparation)
         # F = operations.Fidelity(Tbig, U)
         F = operations.trace_dist(rho,comparation)
-        print(F)
+        # print(F)
         infidelity =  F
         return infidelity
 
@@ -103,7 +106,7 @@ initial_state2 = qtp.rand_ket(3)
 state = qtp.tensor(initial_state1, initial_state2)
 state = state*state.dag()
 
-state = operations.special_state()
+# state = operations.special_state()
 
 optimizer = OptimizerM(target, np.pi/2)
 optimizer.set_master_tau([0, 0, 0, 0, 0, 0])
