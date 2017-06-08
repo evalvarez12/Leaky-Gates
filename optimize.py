@@ -2,16 +2,18 @@ import scipy as scipy
 import scipy.optimize as optimize
 import operations
 import numpy as np
+import qutip as qtp
 
 class Optimizer:
-    def __init__(self, target, evolution_time, project="True"):
+    def __init__(self, target, evolution_time, master=False):
             self.Target = target
             self.evolution_time = evolution_time
-            if project:
-                self.P = operations.projector_2qutrit()
-            else:
+            if master:
+                print("HRere")
                 d = target.dims[0]
                 self.P = qtp.qeye(d)
+            else:
+                self.P = operations.projector_2qutrit()
 
 
 
