@@ -1,3 +1,8 @@
+import scipy as scipy
+import scipy.optimize as optimize
+from eduardo import *
+
+
 def cost_func(x, P, U_evolution, U_target):
     """
     x : array like
@@ -17,13 +22,22 @@ def cost_func(x, P, U_evolution, U_target):
     infidelity = 1- F
     return infidelity
 
-import scipy as scipy
-import scipy.optimize as optimize
 
 #optimizer
+coupling = 0.3
+omega = .5
+delta = .5
 
+evolution_time = np.pi/(2*coupling)
+H = H_coupled_qutrit(.5, .5, .5, .5, coupling)
+# print(H)
+U_evolution = (-1j * H * evolution_time).expm()
+
+U_target = target_iSWAP()
+print(U_target)
 #anonymous call, vary only x
 infidelity = lambda x: cost_func(x, P = P, U_evolution = U_evolution, U_target = U_target)
+
 #setup the constraints
 bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
 x0 = [0,0,0]

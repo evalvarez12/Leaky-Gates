@@ -8,7 +8,7 @@ omega = .5
 delta = .5
 
 evolution_time = np.pi/(2*coupling)
-H = H_coupled_qutrit(.5, 0, .5, 0, coupling)
+H = H_coupled_qutrit(.5, .5, .5, .5, coupling)
 # print(H)
 U_evolution = (-1j * H * evolution_time).expm()
 print(U_evolution)
@@ -16,7 +16,7 @@ print(U_evolution)
 P = proyector()
 P = qtp.tensor(P, P)
 
-ZZ = sigmaz_qutrit(np.pi/5., np.pi/5.)
+ZZ = matrix_optimize(np.pi/5., np.pi/5.,0)
 print(ZZ)
 U_qubit = P * ZZ * U_evolution * P.dag()
 print(U_qubit)
