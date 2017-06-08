@@ -35,11 +35,20 @@ U_evolution = (-1j * H * evolution_time).expm()
 P = proyector()
 P = qtp.tensor(P, P)
 U_target = target_iSWAP()
-print(U_target)
+# print(U_target)
 #anonymous call, vary only x
 infidelity = lambda x: cost_func(x, P = P, U_evolution = U_evolution, U_target = U_target)
 
 #setup the constraints
 bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
-x0 = [0,0,0]
-res = scipy.optimize.minimize(infidelity, x0, method= 'BFGS',bounds=bnds, tol= 1e-5)
+x0 = [1,0,.5]
+# res = scipy.optimize.minimize(infidelity, x0, method= 'BFGS',bounds=bnds, tol= 1e-5)
+res = scipy.optimize.minimize(infidelity, x0, method='nelder-mead', options={'xtol': 1e-8, 'disp': True})
+
+
+
+#check
+x1, x2, x3 = res.x
+ZZ = matrix_optimize(x1, x2, x3)
+U_qubit = P * ZZ * U_evolution * P.dag()
+print(Fidelity(U_target, U_qubit))
