@@ -44,7 +44,7 @@ def target_iSWAP_master():
     ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - 1j*qtp.tensor(ket0, ket1)*qtp.tensor(bra1, bra0) \
         - 1j*qtp.tensor(ket1, ket0)*qtp.tensor(bra0, bra1) + qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
-    return qtp.tensor(A, A)
+    return A
 
 def target_CNOT():
     ket0, ket1, bra0, bra1 = basis_qubit()
@@ -115,6 +115,14 @@ def vectorize_operator(X):
     m, n = matrix.shape
     vec = matrix.reshape(m*n)
     return qtp.Qobj(vec)
+
+def un_vectorize(X):
+    # Only works on ket
+    vector = X.full()
+    m = vector.shape[0]
+    m = int(np.sqrt(m))
+    matrix = vector.reshape(m, m)
+    return qtp.Qobj(matrix)
 
 
 def unitary_evolution_vectorized(H):
