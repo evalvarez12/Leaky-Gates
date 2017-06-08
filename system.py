@@ -7,7 +7,7 @@ coupling = 0.3
 omega = .5
 delta = .5
 
-evolution_time = np.pi/(np.sqrt(2)*coupling)
+evolution_time = np.pi/(2*coupling)
 H = H_coupled_qutrit(.5, 0, .5, 0, coupling)
 # print(H)
 U_evolution = (-1j * H * evolution_time).expm()
@@ -16,12 +16,14 @@ print(U_evolution)
 P = proyector()
 P = qtp.tensor(P, P)
 
-U_qubit = P * U_evolution * P.dag()
+ZZ = sigmaz_qutrit(np.pi/5., np.pi/5.)
+print(ZZ)
+U_qubit = P * ZZ * U_evolution * P.dag()
 print(U_qubit)
 
-ZZ = qtp.tensor(qtp.gates.rz(np.pi), qtp.gates.rz(np.pi))
-ZZU = ZZ*U_qubit
-print(ZZU)
+# ZZ = qtp.tensor(qtp.gates.rz(np.pi), qtp.gates.rz(np.pi))
+# ZZU = ZZ*U_qubit
+# print(ZZU)
 
 print("Using master equation")
 w = -1

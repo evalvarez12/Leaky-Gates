@@ -30,8 +30,16 @@ def proyector():
     P = bitKet0*triBra0 + bitKet1*triBra1
     return P
 
-# def sigmaz_qutriz(position):
+def sigmaz_qutrit(theta1, theta2):
+    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
+    A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) + qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
+        - qtp.tensor(ket1, ket0)*qtp.tensor(bra1, bra0) - qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
+    B =  qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
+        + qtp.tensor(ket1, ket0)*qtp.tensor(bra1, bra0) - qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
 
+    A = (1j * theta1 * A).expm()
+    B = (1j * theta2 * B).expm()
+    return A*B
 
 def H_single(freq1, anh1):
     ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
