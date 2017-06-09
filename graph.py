@@ -2,14 +2,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random
 import matplotlib.pyplot as plt
+import optimize
+import operations
 
 # Generate some test data
-x = np.random.randn(8873)
-y = np.random.randn(8873)
+N = 20
 
-heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
-extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+coupling = 0.3
+omega = .5
+target = operations.target_iSWAP()
+
+data = np.zeros((N, N))
+delta = np.linspace(0, 10.*coupling, N)
+
+
+optimizer = optimize.Optimizer(target, np.pi/2.)
+
+for i in range(N):
+    for j in range(N):
+        data[i, j] = optimizer.get_fidelity(omega, delta[i], omega, delta[j], coupling)
+    print(i)
 
 plt.clf()
-plt.imshow(heatmap.T, extent=extent, origin='lower',  cmap='hot')
+plt.imshow(data, origin='lower',  cmap='hot')
 plt.show()

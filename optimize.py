@@ -29,9 +29,8 @@ class Optimizer:
         theta2 = x[1]
         theta3 = x[2]
         unitary_product_phase = operations.matrix_optimize(theta1, theta2, theta3)
-        projected_U_evolution = self.P*U_evolution*self.P.dag()
-        projected_unitary_phase = self.P*unitary_product_phase*self.P.dag()
-        unitary = projected_unitary_phase*projected_U_evolution
+        projected_unitary_phase = self.P * unitary_product_phase * self.P.dag()
+        unitary = projected_unitary_phase * U_evolution
         F = operations.Fidelity(self.Target, unitary)
         infidelity = 1 - F
         return infidelity
@@ -48,17 +47,13 @@ class Optimizer:
         bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
         x0 = [np.pi,np.pi,0]
         res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
-        # return res
-        #check
-        # x1, x2, x3 = res.x
-        # ZZ = operations.matrix_optimize(x1, x2, x3)
-        # U_qubit = self.P * ZZ * U_evolution * self.P.dag()
-        # # print(Fidelity(U_target, U_qubit))
+
         return 1-res.fun
 
     def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
-        U = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
-        return self._minimize(U)
+        U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
+        U_projected = self.P*U_evolution*self.P.dag()
+        return self._minimize(U_projected)
 
 
     # def _get_trace_distance(self, rho_sim, rho_target):
