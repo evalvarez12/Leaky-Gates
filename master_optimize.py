@@ -5,15 +5,14 @@ import numpy as np
 import qutip as qtp
 
 class OptimizerM:
-    def __init__(self, target, evolution_time):
-            self.Target = target
+    def __init__(self, target, evolution_time, tau):
+            self.Target = qtp.tensor(target, target.dag())
             # print(target)
             self.evolution_time = evolution_time
-            self.P = operations.projector_2qutrit()
+            self.Id = qtp.qeye([3, 3])
+            # self.P = operations.projector_2qutrit()
+            self.tau = tau
 
-
-    def set_master_tau(self, tau):
-        self.tau = tau
 
     def _cost_func(self, x, U_evolution, initial_state):
         """
@@ -30,17 +29,18 @@ class OptimizerM:
         theta3 = x[2]
 
         # state_vec = operations.vectorize_operator(state.full())
-        state_vec = qtp.operator_to_vector(state).full()
+        # state_vec = qtp.operator_to_vector(state).full()
         # print(U_evolution)
         # print(state_vec)
-        state_evolved = U_evolution.full().dot(state_vec)
+        # state_evolved = U_evolution.full().dot(state_vec)
 
 
-        state_evolved = operations.un_vectorize(state_evolved)
+        # state_evolved = operations.un_vectorize(state_evolved)
         # state_evolved = qtp.vector_to_operator(state_evolved)
 
         ZZ = operations.matrix_optimize(theta1, theta2, theta3)
-
+        # ZZ = operations.matrix_optimize(0, 0, 0)
+        U = qtp.tensor(ZZ, self.Id) * U_evolution * qtp.tensor(self.Id, ZZ.dag())
         # iden = qtp.qeye([3,3])
         # ZZbig = qtp.tensor(ZZ, iden) + qtp.tensor(iden, ZZ)
 
@@ -49,37 +49,35 @@ class OptimizerM:
         # Tbig = qtp.tensor(self.Target, iden) + qtp.tensor(iden, self.Target.dag())
         # Tbig = qtp.tensor(self.Target, self.Target.dag())
         # Do   U rho U+
-        rho = ZZ.full().dot( state_evolved.dot( ZZ.dag().full()))
-        rho = self.P.full().dot(rho.dot(self.P.dag().full()))
+        # rho = ZZ.full().dot( state_evolved.dot( ZZ.dag().full()))
+        # rho = self.P.full().dot(rho.dot(self.P.dag().full()))
 
-        comp = self.P *state * self.P.dag()
-        comparation = (self.Target * comp * self.Target.dag()).full()
+        # comp = self.P *state * self.P.dag()
+        # comparation = (self.Target * comp * self.Target.dag()).full()
         # comparation = (self.Target * state * self.Target.dag())
         # comparation = (self.P * comparation * self.P.dag()).full()
         # F = qtp.tracedist(rho, comparation)
-        # F = operations.Fidelity(Tbig, U)
-        F = operations.trace_dist(rho,comparation)
-        # print(F)
-        infidelity =  F
+        F = operations.Fidelity(self.Target, U)
+        # F = operations.trace_dist(rho,comparation)
+        print(F)
+        infidelity = 1 - F
         return infidelity
 
     def _get_evolution(self, freq1, anh1, freq2, anh2, coupling):
         evolution_time = self.evolution_time/coupling
         H = operations.H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling)
         g = operations.operators()
-        G_evolution_master  = operations.get_master_equation(H, g, self.tau)
-        U_evolution_master = ( G_evolution_master * evolution_time).expm()
+        G_evolution_master = operations.get_master_equation(H, g, self.tau)
+        U_evolution_master = (G_evolution_master * evolution_time).expm()
         return U_evolution_master
 
     def _minimize(self, state, U_evolution):
-        infidelity = lambda x: self._cost_func(x, U_evolution = U_evolution, initial_state=state)
-        #setup the constraints
-        bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
-        x0 = [np.pi/2,np.pi/2,np.pi]
+        infidelity = lambda x: self._cost_func(x, U_evolution=U_evolution, initial_state=state)
+        # setup the constraints
+        x0 = [np.pi/3, np.pi/3, 0]
         res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
         # return res
         #check
-        x1, x2, x3 = res.x
         print(res)
 
         return 1 - res.fun
@@ -100,16 +98,21 @@ print("USING MASTER")
 coupling = 0.3
 omega = .5
 delta = .5
-target = operations.target_iSWAP()
+target = operations.target_iSWAP_master()
+evolution_time = np.pi/2
+
 initial_state1 = qtp.rand_ket(3)
 initial_state2 = qtp.rand_ket(3)
 state = qtp.tensor(initial_state1, initial_state2)
 state = state*state.dag()
 
 # state = operations.special_state()
+H = operations.H_coupled_qutrit(omega, delta, omega, delta, coupling)
+U_evolution = (-1j * H * evolution_time/coupling).expm()
+# target = U_evolution
 
-optimizer = OptimizerM(target, np.pi/2)
-optimizer.set_master_tau([0, 0, 0, 0, 0, 0])
+
+optimizer = OptimizerM(target, evolution_time, tau=[0, 0, 0, 0, 0, 0])
 print(optimizer.get_fidelity(omega, delta, omega, delta, coupling, state))
 
 #

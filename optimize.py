@@ -93,11 +93,11 @@ class Optimizer:
     #     # print(Fidelity(U_target, U_qubit))
     #     return operations.Fidelity(self.Target, U_qubit)
 
-coupling = 0.3
-omega = .5
-delta = .5
+coupling = 2313
+omega = 50
+delta = 15
 target = operations.target_iSWAP()
-optimizer = Optimizer(target, np.pi/2.)
+optimizer = Optimizer(target, 231.)
 print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
 
 #
