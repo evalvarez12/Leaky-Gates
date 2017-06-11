@@ -28,9 +28,12 @@ class Optimizer:
         theta1 = x[0]
         theta2 = x[1]
         theta3 = x[2]
-        unitary_product_phase = operations.matrix_optimize(theta1, theta2, theta3)
-        projected_unitary_phase = self.P * unitary_product_phase * self.P.dag()
-        unitary = projected_unitary_phase * U_evolution
+        unitary_phase = operations.matrix_optimize(theta1, theta2, theta3)
+        # projected_unitary_phase = self.P * unitary_product_phase * self.P.dag()
+        unitary = unitary_phase * U_evolution
+
+        unitary = self.P * unitary * self.P.dag()
+
         F = operations.Fidelity(self.Target, unitary)
         infidelity = 1 - F
         return infidelity
@@ -53,7 +56,8 @@ class Optimizer:
     def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
         U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
         U_projected = self.P*U_evolution*self.P.dag()
-        return self._minimize(U_projected)
+        print(U_evolution)
+        return self._minimize(U_evolution)
 
 
     # def _get_trace_distance(self, rho_sim, rho_target):
@@ -93,12 +97,12 @@ class Optimizer:
     #     # print(Fidelity(U_target, U_qubit))
     #     return operations.Fidelity(self.Target, U_qubit)
 
-coupling = 2313
-omega = 50
-delta = 15
+coupling = .2 * np.pi
+omega = 5.5 * 2 * np.pi
+delta = 3 * 2 * np.pi
 target = operations.target_iSWAP()
-optimizer = Optimizer(target, 231.)
-print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
+optimizer = Optimizer(target, np.pi/2.)
+print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))
 
 #
 # coupling = 0.3

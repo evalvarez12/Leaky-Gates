@@ -34,6 +34,11 @@ def projector_2qutrit():
     p = projector()
     return qtp.tensor(p, p)
 
+def projector_2qutrit_nodimred():
+    p = qutrit_to_qubit_noDimRed()
+    return qtp.tensor(p, p)
+
+
 def target_iSWAP():
     ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) - 1j*qtp.tensor(ket0, ket1)*qtp.tensor(bra1, bra0) \
@@ -104,10 +109,10 @@ def H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling):
 
 
 
-def qutrit_to_qubit_noDimRed(U_evolution):
+def qutrit_to_qubit_noDimRed():
     ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
-    P = qtp.tensor(ket0, ket0)*qtp.dag(qtp.tensor(ket0, ket0)) + qtp.tensor(ket0, ket1)*qtp.dag(qtp.tensor(ket0,ket1)) + qtp.tensor(ket1,ket0)*qtp.dag(qtp.tensor(ket1,ket0)) + qtp.tensor(ket1,ket1)*qtp.dag(qtp.tensor(ket1,ket1))
-    return qtp.dag(P)*(U_evolution)*(P)
+    P = ket0*bra0 + ket1*bra1
+    return P
 
 
 def vectorize_operator(X):

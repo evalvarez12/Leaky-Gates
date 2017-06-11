@@ -10,7 +10,7 @@ class OptimizerM:
             # print(target)
             self.evolution_time = evolution_time
             self.Id = qtp.qeye([3, 3])
-            # self.P = operations.projector_2qutrit()
+            self.P = operations.projector_2qutrit_nodimred()
             self.tau = tau
 
 
@@ -41,6 +41,8 @@ class OptimizerM:
         ZZ = operations.matrix_optimize(theta1, theta2, theta3)
         # ZZ = operations.matrix_optimize(0, 0, 0)
         U = qtp.tensor(ZZ, self.Id) * U_evolution * qtp.tensor(self.Id, ZZ.dag())
+
+        # U = qtp.tensor(self.P, self.Id) * U * qtp.tensor(self.Id, self.P.dag())
         # iden = qtp.qeye([3,3])
         # ZZbig = qtp.tensor(ZZ, iden) + qtp.tensor(iden, ZZ)
 
@@ -99,6 +101,7 @@ coupling = 0.3
 omega = .5
 delta = .5
 target = operations.target_iSWAP_master()
+print(target)
 evolution_time = np.pi/2
 
 initial_state1 = qtp.rand_ket(3)
@@ -112,7 +115,7 @@ U_evolution = (-1j * H * evolution_time/coupling).expm()
 # target = U_evolution
 
 
-optimizer = OptimizerM(target, evolution_time, tau=[0, 0, 0, 0, 0, 0])
+optimizer = OptimizerM(target, evolution_time, tau=[.5, .5, .5, .2, .2, .2])
 print(optimizer.get_fidelity(omega, delta, omega, delta, coupling, state))
 
 #
