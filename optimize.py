@@ -50,13 +50,13 @@ class Optimizer:
         bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
         x0 = [np.pi,np.pi,0]
         res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
-
+        print(res)
         return 1-res.fun
 
     def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
         U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
         U_projected = self.P*U_evolution*self.P.dag()
-        print(U_evolution)
+        # print(U_evolution)
         return self._minimize(U_evolution)
 
 
@@ -99,7 +99,7 @@ class Optimizer:
 
 coupling = .2 * np.pi
 omega = 5.5 * 2 * np.pi
-delta = 3 * 2 * np.pi
+delta = .3  * np.pi
 target = operations.target_iSWAP()
 optimizer = Optimizer(target, np.pi/2.)
 print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))

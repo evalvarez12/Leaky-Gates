@@ -43,6 +43,7 @@ class OptimizerM:
         U = qtp.tensor(ZZ, self.Id) * U_evolution * qtp.tensor(self.Id, ZZ.dag())
 
         # U = qtp.tensor(self.P, self.Id) * U * qtp.tensor(self.Id, self.P.dag())
+        U = qtp.tensor(self.P, self.P) * U
         # iden = qtp.qeye([3,3])
         # ZZbig = qtp.tensor(ZZ, iden) + qtp.tensor(iden, ZZ)
 
@@ -61,7 +62,7 @@ class OptimizerM:
         # F = qtp.tracedist(rho, comparation)
         F = operations.Fidelity(self.Target, U)
         # F = operations.trace_dist(rho,comparation)
-        print(F)
+        # print(F)
         infidelity = 1 - F
         return infidelity
 
@@ -97,12 +98,12 @@ class OptimizerM:
 
 print("USING MASTER")
 
-coupling = 0.3
-omega = .5
-delta = .5
+coupling = .2 * np.pi
+omega = 5.5 * 2 * np.pi
+delta = 3 * 2 * np.pi
 target = operations.target_iSWAP_master()
-print(target)
-evolution_time = np.pi/2
+# print(target)
+evolution_time = np.pi/2.
 
 initial_state1 = qtp.rand_ket(3)
 initial_state2 = qtp.rand_ket(3)
@@ -110,13 +111,13 @@ state = qtp.tensor(initial_state1, initial_state2)
 state = state*state.dag()
 
 # state = operations.special_state()
-H = operations.H_coupled_qutrit(omega, delta, omega, delta, coupling)
-U_evolution = (-1j * H * evolution_time/coupling).expm()
+# H = operations.H_coupled_qutrit(omega, delta, omega, delta, coupling)
+# U_evolution = (-1j * H * evolution_time/coupling).expm()
 # target = U_evolution
 
 
-optimizer = OptimizerM(target, evolution_time, tau=[.5, .5, .5, .2, .2, .2])
-print(optimizer.get_fidelity(omega, delta, omega, delta, coupling, state))
+optimizer = OptimizerM(target, evolution_time, tau=[.0, .0, 0, 0, 0, 0])
+print(optimizer.get_fidelity(omega, 0, omega, delta, coupling, state))
 
 #
 # evolution_time = np.pi/(2*coupling)

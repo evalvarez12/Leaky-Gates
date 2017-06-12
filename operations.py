@@ -92,6 +92,7 @@ def H_coupling(coupling):
 def Fidelity(U_target, U):
     d, _ = U_target.shape
     f = (U - U_target).norm()/d
+    # print(f*d)
     return 1 - f**2
 
 def H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling):
