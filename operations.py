@@ -30,12 +30,12 @@ def projector():
     P = bitKet0*triBra0 + bitKet1*triBra1
     return P
 
-def projector_2qutrit():
+def projector2qutrits():
     p = projector()
     return qtp.tensor(p, p)
 
-def projector_2qutrit_nodimred():
-    p = qutrit_to_qubit_noDimRed()
+def projector2qutrits_master():
+    p = projector_master()
     return qtp.tensor(p, p)
 
 
@@ -51,7 +51,13 @@ def target_iSWAP_master():
         - 1j*qtp.tensor(ket1, ket0)*qtp.tensor(bra0, bra1) + qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
     return A
 
-def target_CNOT():
+def target_CPHASE():
+    ket0, ket1, bra0, bra1 = basis_qubit()
+    A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) + qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
+        + qtp.tensor(ket1, ket0)*qtp.tensor(bra1, bra0) - qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
+    return A
+
+def target_CPHASE_master():
     ket0, ket1, bra0, bra1 = basis_qubit()
     A = qtp.tensor(ket0, ket0)*qtp.tensor(bra0, bra0) + qtp.tensor(ket0, ket1)*qtp.tensor(bra0, bra1) \
         + qtp.tensor(ket1, ket0)*qtp.tensor(bra1, bra0) - qtp.tensor(ket1, ket1)*qtp.tensor(bra1, bra1)
@@ -89,7 +95,7 @@ def H_coupling(coupling):
     return coupling*(term1 + term2)
 
 
-def Fidelity(U_target, U):
+def fidelity(U_target, U):
     d, _ = U_target.shape
     f = (U - U_target).norm()/d
     # print(f*d)
@@ -110,7 +116,7 @@ def H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling):
 
 
 
-def qutrit_to_qubit_noDimRed():
+def projector_master():
     ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
     P = ket0*bra0 + ket1*bra1
     return P

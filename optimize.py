@@ -5,126 +5,75 @@ import numpy as np
 import qutip as qtp
 
 class Optimizer:
-    def __init__(self, target, evolution_time, master=False):
-            self.Target = target
-            self.evolution_time = evolution_time
-            self.master = master
-            self.P = operations.projector_2qutrit()
+    """
+    Optimizer class.
+    Uses the qubit-qubit scheme to simulate the evolution of the system
+    at a given time. Single qubit gates Z1(theta), Z2(theta) and I(theta)
+    are the used in a optimizer function to maximize the fidelity with
+    a specific target gate.
+    """
 
-
-
-    def set_master_tau(self, tau):
-        self.tau = tau
+    def __init__(self, target="ISWAP"):
+        """Init function: Define the target gate of the optimizer."""
+        if target == "ISWAP":
+            self.target = operations.target_iSWAP()
+            self.evolution_time = np.pi/2.
+        if target == "CPHASE":
+            self.target = operations.target_CPHASE()
+            self.evolution_time = np.pi/np.sqrt(2)
+        self.P = operations.projector2qutrits()
 
     def _cost_func(self, x, U_evolution):
         """
-        x : array like
-        x[0] : parameter for exp(i*sigmaz_A*x[0])
-        x[1] : parameter for exp(i*sigmaz_B*x[1])
-        x[2] : parameter for exp(i*identity*x[1])
-        this function calls fidelity and outputs 1-fidelity as a cost function
-        this is fed into an optimizer
+        Cost function.
+        Input x: araray, U_evolution: evolution operator.
+        x = (theta1, theta2, theta3) the arguments to which the
+        single qubit gates are optimized to minimize fidelity
         """
-        theta1 = x[0]
-        theta2 = x[1]
-        theta3 = x[2]
-        unitary_phase = operations.matrix_optimize(theta1, theta2, theta3)
-        # projected_unitary_phase = self.P * unitary_product_phase * self.P.dag()
-        unitary = unitary_phase * U_evolution
+        theta1,  theta2, theta3 = x
+         # single qubit rotations
+        ZZ = operations.matrix_optimize(theta1, theta2, theta3)
+        U = ZZ * U_evolution
 
-        unitary = self.P * unitary * self.P.dag()
+        # collapse the operatarions
+        U = self.P * U * self.P.dag()
 
-        F = operations.Fidelity(self.Target, unitary)
-        infidelity = 1 - F
+        # calculate fidelity
+        f = operations.fidelity(self.target, U)
+        # 1 - fidelity: used for the minimization alg.
+        infidelity = 1 - f
         return infidelity
 
     def _get_evolution(self, freq1, anh1, freq2, anh2, coupling):
+        """Compute the Hamiltonian and exponenciate it to obtain evolution operator."""
+        # compute the Hamiltonian of the entire system
         evolution_time = self.evolution_time/coupling
         H = operations.H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling)
+        self.H = H
         U_evolution = (-1j * H * evolution_time).expm()
         return U_evolution
 
     def _minimize(self, U_evolution):
+        """Funcion to call the minimization algorithm."""
+        # anonymous function to accomodate all the parameters
         infidelity = lambda x: self._cost_func(x, U_evolution = U_evolution)
-        #setup the constraints
-        bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
-        x0 = [np.pi,np.pi,0]
-        res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
+        # initial guess for the optimizer
+        x0 = [np.pi, np.pi, 0]
+        # optimizer solution
+        res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead',tol=1e-10)
         print(res)
         return 1-res.fun
 
     def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
+        """Compute the optimized fidelity for a set of system parameters."""
         U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
-        U_projected = self.P*U_evolution*self.P.dag()
-        # print(U_evolution)
         return self._minimize(U_evolution)
 
 
-    # def _get_trace_distance(self, rho_sim, rho_target):
-    #
-    #     #rho_sim is reshaped density matrix
-    #     #todo: Put the density matrix argument
-    #     #calculates the trace distance between target..
-    #     #..density matrix and materequation density matrix
-    #     m, n = rho_sim.shape
-    #     rho_sim = rho_sim.reshape(np.sqrt(m*n),np.sqrt(m*n))
-    #     l,j = rho_target.shape
-    #     rho_target = rho_target.reshape(np.sqrt(m*n),np.sqrt(m*n))
-    #
-    #     trace_distance = qtp.tracedist(rho_sim, rho_target, sparse=False, tol=0)
-    #     return trace_distance
-    # def _cost_trace_distance(self, x, rho_sim, rho_target):
-    #     #calculates a cost function based on the trace distance
-    #     #of calculated density matrix from target density matrix
-    #     theta1 = x[0]
-    #     theta2 = x[1]
-    #     theta3 = x[2]
-    #     m, n = rho_sim.shape
-    #     rho_sim = rho_sim.reshape(np.sqrt(m*n),np.sqrt(m*n))
-    #     unitary_product_phase = operations.matrix_optimize(theta1, theta2, theta3)
-    #     rho_parametric = unitary_product_phase*rho_sim*unitary_product_phase.dag()
-    #     cost_trace_distance = 1 - _get_trace_distance(self, rho_parametric, rho_target)
-    #     return cost_trace_distance
-    # def _minimize_trace_distance(self, rho_simulation):
-    #     trace_fidelity = lambda x: self._cost_tace_distance(self, x, rho_sim = rho_sim, rho_target = rho_target
-    #     #setup the constraints
-    #     bnds = ((0,2*np.pi),(0,2*np.pi),(0,2*np.pi))
-    #     x0 = [np.pi,np.pi,0]
-    #     res = scipy.optimize.minimize(trace_fidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
-    #
-    #     ZZ = operations.matrix_optimize(res.x[0], res.x[1], res.x[2])
-    #
-    #     # print(Fidelity(U_target, U_qubit))
-    #     return operations.Fidelity(self.Target, U_qubit)
-
+# TESTING optimizer
 coupling = .2 * np.pi
-omega = 5.5 * 2 * np.pi
-delta = .3  * np.pi
+omega = .5 * 2 * np.pi
+delta = 0.3 * np.pi
 target = operations.target_iSWAP()
-optimizer = Optimizer(target, np.pi/2.)
+optimizer = Optimizer(target="ISWAP")
 print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))
-
-#
-# coupling = 0.3
-# omega = .5
-# delta = .5
-# target = operations.target_iSWAP_master()
-# optimizer = Optimizer(target, np.pi/2., master=True)
-# optimizer.set_master_tau([0, 0, 0, 0, 0, 0])
-# print(optimizer.get_fidelity(omega, delta, omega, delta, coupling))
-#
-# #
-# # evolution_time = np.pi/(2*coupling)
-# # H = H_coupled_qutrit(.5, .5, .5, .5, coupling)
-# # # print(H)
-# # U_evolution = (-1j * H * evolution_time).expm()
-# # # print(U_evolution)
-# #
-# P = proyector()
-# P = qtp.tensor(P, P)
-# U_target = target_iSWAP()
-#
-#
-# #optimizer
-#
-# #anonymous call, vary only x
