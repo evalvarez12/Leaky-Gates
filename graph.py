@@ -32,9 +32,9 @@ omega2 = omega1
 delta1 = 0.15 * 2 * np.pi
 delta2 = 0.1 * 2 * np.pi
 
-N = 150
+N = 40
 
-g = np.linspace(0.01, .03, N)
+g = np.linspace(0.01, .25 * delta2, N)
 
 optimizer = optimize.Optimizer("ISWAP")
 data = []

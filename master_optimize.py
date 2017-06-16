@@ -50,8 +50,8 @@ class OptimizerMaster:
     def _minimize(self, U_evolution):
         """Funcion to call the minimization algorithm."""
         infidelity = lambda x: self._cost_func(x, U_evolution=U_evolution)
-        x0 = [np.pi/3, np.pi/3, 0]
-        res = scipy.optimize.minimize(infidelity, x0, method= 'Nelder-Mead', tol= 1e-10)
+        x0 = [np.pi, np.pi, 0]
+        res = scipy.optimize.basinhopping(infidelity, x0, T=.2, niter=5)
         print(res)
         return 1 - res.fun
 
@@ -62,9 +62,16 @@ class OptimizerMaster:
         return self._minimize(U)
 
 
-coupling = .2 * np.pi
-omega = .5 * 2 * np.pi
-delta = .3  * np.pi
+omega1 = 5.5 * 2 * np.pi
+omega2 = omega1
+delta1 = 0.15 * 2 * np.pi
+delta2 = 0.1 * 2 * np.pi
 
-optimizer = OptimizerMaster(tau=[.0, .0, 0, 0, 0, 0], target="ISWAP")
-print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))
+coupling = .1 * delta2
+
+tau_d = .4188
+tau_r10 = .31
+tau_r21 = .155
+
+optimizer = OptimizerMaster(tau=[tau_d,tau_d, tau_r10, tau_r10, tau_r21, tau_r21], target="ISWAP")
+print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling))

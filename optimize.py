@@ -5,18 +5,6 @@ import numpy as np
 import qutip as qtp
 
 
-class MyBounds(object):
-    def __init__(self, xmax=[2*np.pi, 2*np.pi, 2*np.pi], xmin=[0, 0, 0]):
-        self.xmax = np.array(xmax)
-        self.xmin = np.array(xmin)
-    def __call__(self, **kwargs):
-        x = kwargs["x_new"]
-        tmax = bool(np.all(x <= self.xmax))
-        tmin = bool(np.all(x >= self.xmin))
-        return tmax and tmin
-
-
-
 class Optimizer:
     """
     Optimizer class.
@@ -73,9 +61,7 @@ class Optimizer:
         # initial guess for the optimizer
         x0 = [np.pi, np.pi, 0]
         # optimizer solution
-        bnds = ((0, 2*np.pi), (0,2*np.pi))
-        mybounds = MyBounds()
-        res = scipy.optimize.basinhopping(infidelity, x0, T=.2, accept_test=mybounds)
+        res = scipy.optimize.basinhopping(infidelity, x0, T=.2, niter=5)
         # res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
         print(res)
         return 1-res.fun
@@ -87,9 +73,14 @@ class Optimizer:
 
 
 # TESTING optimizer
-coupling = .3 * np.pi
-omega = .5 * 2 * np.pi
-delta = 0. * np.pi
+omega1 = 5.5 * 2 * np.pi
+omega2 = omega1
+delta1 = 0.15 * 2 * np.pi
+delta2 = 0.1 * 2 * np.pi
+
+coupling = .1 * delta2
+
+
 target = operations.target_iSWAP()
 optimizer = Optimizer(target="ISWAP")
-print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))
+print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling))

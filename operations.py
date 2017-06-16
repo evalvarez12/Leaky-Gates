@@ -80,12 +80,7 @@ def H_single(freq1, anh1):
     H = freq1*ket1*bra1 + (2*freq1 - anh1)*ket2*bra2
     return H
 
-def H_single2(freq1, anh1, freq2, anh2):
-    ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
-    qubit_term1 = freq1*ket1*bra1 + (2*freq1 - anh1)*ket2*bra2
-    qubit_term2 = freq2*ket1*bra1 + (2*freq2 - anh2)*ket2*bra2
-    qubit_term = qtp.tensor(qubit_term1, qubit_term2)
-    return qubit_term
+
 
 def H_coupling(coupling):
     ket0, ket1, ket2, bra0, bra1, bra2 = basis_qutrit()
@@ -107,9 +102,10 @@ def H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling):
     anh 1,2 : anharmonicity of two qubits in MHz
     g : coupling between qutrits
     """
+    idd = qtp.qeye(3)
     single_term1 = H_single(freq1, anh1)
     single_term2 = H_single(freq2, anh2)
-    single_full = qtp.tensor(single_term1, single_term2)
+    single_full = qtp.tensor(single_term1, idd) + qtp.tensor(idd, single_term2)
     coupling_term = H_coupling(coupling)
     hamiltonian_full = single_full + coupling_term
     return hamiltonian_full
