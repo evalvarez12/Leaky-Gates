@@ -50,7 +50,7 @@ class OptimizerMaster:
     def _minimize(self, U_evolution):
         """Funcion to call the minimization algorithm."""
         infidelity = lambda x: self._cost_func(x, U_evolution=U_evolution)
-        x0 = [np.pi, np.pi, 0]
+        x0 = [np.pi, np.pi/3, 0]
         res = scipy.optimize.basinhopping(infidelity, x0, T=.2, niter=5)
         print(res)
         return 1 - res.fun
