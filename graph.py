@@ -32,9 +32,9 @@ omega2 = omega1
 delta1 = 0.15 * 2 * np.pi
 delta2 = 0.1 * 2 * np.pi
 
-N = 40
+N = 150
 
-g = np.linspace(0.01, .03, 40)
+g = np.linspace(0.01, .03, N)
 
 optimizer = optimize.Optimizer("ISWAP")
 data = []
@@ -42,5 +42,7 @@ for i in g:
     f = optimizer.get_fidelity(omega1, delta1, omega2, delta2, i)
     data += [f]
 
-plt.plot(data)
+np.save("data/optimizer_3a_150_BH", data)
+
+plt.plot(g, data, 'o-')
 plt.show()

@@ -4,6 +4,19 @@ import operations
 import numpy as np
 import qutip as qtp
 
+
+class MyBounds(object):
+    def __init__(self, xmax=[2*np.pi, 2*np.pi, 2*np.pi], xmin=[0, 0, 0]):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+
+
 class Optimizer:
     """
     Optimizer class.
@@ -61,7 +74,9 @@ class Optimizer:
         x0 = [np.pi, np.pi, 0]
         # optimizer solution
         bnds = ((0, 2*np.pi), (0,2*np.pi))
-        res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
+        mybounds = MyBounds()
+        res = scipy.optimize.basinhopping(infidelity, x0, T=.2, accept_test=mybounds)
+        # res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
         print(res)
         return 1-res.fun
 
