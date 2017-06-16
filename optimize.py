@@ -60,7 +60,8 @@ class Optimizer:
         # initial guess for the optimizer
         x0 = [np.pi, np.pi, 0]
         # optimizer solution
-        res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead',tol=1e-10)
+        bnds = ((0, 2*np.pi), (0,2*np.pi))
+        res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
         print(res)
         return 1-res.fun
 
@@ -71,9 +72,9 @@ class Optimizer:
 
 
 # TESTING optimizer
-coupling = .2 * np.pi
+coupling = .3 * np.pi
 omega = .5 * 2 * np.pi
-delta = 0.3 * np.pi
+delta = 0. * np.pi
 target = operations.target_iSWAP()
 optimizer = Optimizer(target="ISWAP")
 print(optimizer.get_fidelity(omega, 0, omega, delta, coupling))
