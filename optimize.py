@@ -14,15 +14,28 @@ class Optimizer:
     a specific target gate.
     """
 
-    def __init__(self, target="ISWAP"):
+    def __init__(self, target="ISWAP", tau=[0, 0, 0, 0, 0, 0], master=False):
         """Init function: Define the target gate of the optimizer."""
-        if target == "ISWAP":
-            self.target = operations.target_iSWAP()
-            self.evolution_time = np.pi/2.
-        if target == "CPHASE":
-            self.target = operations.target_CPHASE()
-            self.evolution_time = np.pi/np.sqrt(2)
-        self.P = operations.projector2qutrits()
+        self.master = master
+        if master:
+            if target == "ISWAP":
+                self.target = operations.target_iSWAP_master()
+                self.evolution_time = np.pi/2.
+            if target == "CPHASE":
+                self.target = operations.target_CPHASE_master()
+                self.evolution_time = np.pi/np.sqrt(2)
+            # self.target = qtp.tensor(self.target, self.target.dag())
+            self.P = operations.projector2qutrits_master()
+            self.tau = tau
+            self.Id = qtp.qeye([3, 3])
+        else:
+            if target == "ISWAP":
+                self.target = operations.target_iSWAP()
+                self.evolution_time = np.pi/2.
+            if target == "CPHASE":
+                self.target = operations.target_CPHASE()
+                self.evolution_time = np.pi/np.sqrt(2)
+            self.P = operations.projector2qutrits()
 
     def _cost_func(self, x, U_evolution):
         """
@@ -45,6 +58,39 @@ class Optimizer:
         infidelity = 1 - f
         return infidelity
 
+    def _cost_func_master(self, x, U_evolution, state):
+        """
+        Cost function.
+        Input x: araray, U_evolution: evolution operator.
+        x = (theta1, theta2, theta3) the arguments to which the
+        single qubit gates are optimized to minimize fidelity
+        """
+        theta1,  theta2, theta3 = x
+        # single qubit rotations
+        ZZ = operations.matrix_optimize(theta1, theta2, theta3)
+        # U = qtp.tensor(ZZ, self.Id) * U_evolution * qtp.tensor(self.Id, ZZ.dag())
+
+        #################################
+        state_vec = qtp.operator_to_vector(state).full()
+        state_evolved = U_evolution.full().dot(state_vec)
+        state_evolved = operations.un_vectorize(state_evolved)
+        rho = ZZ.full().dot( state_evolved.dot( ZZ.dag().full()))
+        rho = self.P.full().dot(rho.dot(self.P.dag().full()))
+
+        comp = (self.target * state * self.target.dag()).full()
+        comp = self.P * comp * self.P.dag()
+
+        F = operations.trace_dist(rho, comp)
+        ######################################
+
+        # project into the qubit space
+        # U = qtp.tensor(self.P, self.Id) * U * qtp.tensor(self.Id, self.P.dag())
+        # compute fidelity
+        # F = operations.fidelity(self.target, U)
+        infidelity = F
+        return infidelity
+
+
     def _get_evolution(self, freq1, anh1, freq2, anh2, coupling):
         """Compute the Hamiltonian and exponenciate it to obtain evolution operator."""
         # compute the Hamiltonian of the entire system
@@ -54,6 +100,16 @@ class Optimizer:
         U_evolution = (-1j * H * evolution_time).expm()
         return U_evolution
 
+
+    def _get_evolution_master(self, freq1, anh1, freq2, anh2, coupling):
+        """Compute the Hamiltonian and exponenciate it to obtain evolution operator."""
+        evolution_time = self.evolution_time/coupling
+        H = operations.H_coupled_qutrit(freq1, anh1, freq2, anh2, coupling)
+        g = operations.operators()
+        G_evolution_master = operations.get_master_equation(H, g, self.tau)
+        U_evolution_master = (G_evolution_master * evolution_time).expm()
+        return U_evolution_master
+
     def _minimize(self, U_evolution):
         """Funcion to call the minimization algorithm."""
         # anonymous function to accomodate all the parameters
@@ -61,26 +117,59 @@ class Optimizer:
         # initial guess for the optimizer
         x0 = [np.pi, np.pi, 0]
         # optimizer solution
-        res = scipy.optimize.basinhopping(infidelity, x0, T=.2, niter=5)
+        bnds = [(0, 2*np.pi), (0, 2*np.pi), (0, 2*np.pi)]
+        minimizer_kwargs = {"method": "Nelder-Mead"}
+        res = scipy.optimize.basinhopping(infidelity, x0, minimizer_kwargs=minimizer_kwargs, T=1., niter=15)
         # res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
         print(res)
+
+        theta1,  theta2, theta3 = res.x
+         # single qubit rotations
+        ZZ = operations.matrix_optimize(theta1, theta2, theta3)
+        U = ZZ * U_evolution
+
+        # collapse the operatarions
+        U = self.P * U * self.P.dag()
+        print(U)
+        print(operations.fidelity(self.target, U))
         return 1-res.fun
 
-    def get_fidelity(self, freq1, anh1, freq2, anh2, coupling):
-        """Compute the optimized fidelity for a set of system parameters."""
-        U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
-        return self._minimize(U_evolution)
 
+    def _minimize_master(self, U_evolution, state):
+        """Funcion to call the minimization algorithm."""
+        infidelity = lambda x: self._cost_func_master(x, U_evolution=U_evolution, state=state)
+        x0 = [np.pi, np.pi, 0]
+        res = scipy.optimize.basinhopping(infidelity, x0, T=1., niter=15)
+        print(res)
+        return 1 - res.fun
+
+    def get_fidelity(self, freq1, anh1, freq2, anh2, coupling, state=0):
+        """Compute the optimized fidelity for a set of system parameters."""
+        if self.master:
+            U_master = self._get_evolution_master(freq1, anh1, freq2, anh2, coupling)
+            f = self._minimize_master(U_master, state)
+        else:
+            U_evolution = self._get_evolution(freq1, anh1, freq2, anh2, coupling)
+            f = self._minimize(U_evolution)
+        return f
 
 # TESTING optimizer
-omega1 = 5.5 * 2 * np.pi
-omega2 = omega1
-delta1 = 0.15 * 2 * np.pi
-delta2 = 0.1 * 2 * np.pi
+omega1 = 7.6 * 2 * np.pi
+coupling = 0.2 * 2 * np.pi
+delta1 = 3 * coupling
+delta2 = 3 * coupling
+omega2 = omega1 + delta2
+print(coupling)
 
-coupling = .1 * delta2
+tau_d = .4188 * 0.
+tau_r10 = .31 * 0.
+tau_r21 = .155 * 0.
+tau = [tau_d, tau_d, tau_r10, tau_r10, tau_r21, tau_r21]
 
+initial_state1 = qtp.rand_ket(3)
+initial_state2 = qtp.rand_ket(3)
+state = qtp.tensor(initial_state1, initial_state2)
+state = state*state.dag()
 
-target = operations.target_iSWAP()
 optimizer = Optimizer(target="ISWAP")
-print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling))
+print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling, state))
