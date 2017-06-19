@@ -117,21 +117,11 @@ class Optimizer:
         # initial guess for the optimizer
         x0 = [np.pi, np.pi, 0]
         # optimizer solution
-        bnds = [(0, 2*np.pi), (0, 2*np.pi), (0, 2*np.pi)]
+        # bnds = [(0, 2*np.pi), (0, 2*np.pi), (0, 2*np.pi)]
         minimizer_kwargs = {"method": "Nelder-Mead"}
         res = scipy.optimize.basinhopping(infidelity, x0, minimizer_kwargs=minimizer_kwargs, T=1., niter=15)
         # res = scipy.optimize.minimize(infidelity, x0, method='Nelder-Mead', tol=1e-10)
         print(res)
-
-        theta1,  theta2, theta3 = res.x
-         # single qubit rotations
-        ZZ = operations.matrix_optimize(theta1, theta2, theta3)
-        U = ZZ * U_evolution
-
-        # collapse the operatarions
-        U = self.P * U * self.P.dag()
-        print(U)
-        print(operations.fidelity(self.target, U))
         return 1-res.fun
 
 
@@ -154,22 +144,24 @@ class Optimizer:
         return f
 
 # TESTING optimizer
-omega1 = 7.6 * 2 * np.pi
-coupling = 0.2 * 2 * np.pi
-delta1 = 3 * coupling
-delta2 = 3 * coupling
-omega2 = omega1 + delta2
-print(coupling)
 
-tau_d = .4188 * 0.
-tau_r10 = .31 * 0.
-tau_r21 = .155 * 0.
-tau = [tau_d, tau_d, tau_r10, tau_r10, tau_r21, tau_r21]
+def test_optimizer():
+    print("Testing optimizer")
+    omega1 = 7.6 * 2 * np.pi
+    coupling = 0.2 * 2 * np.pi
+    delta1 = 2.5 * coupling
+    delta2 = 2.5 * coupling
+    omega2 = omega1 + delta2
 
-initial_state1 = qtp.rand_ket(3)
-initial_state2 = qtp.rand_ket(3)
-state = qtp.tensor(initial_state1, initial_state2)
-state = state*state.dag()
+    tau_d = .4188
+    tau_r10 = .31
+    tau_r21 = .155
+    tau = [tau_d, tau_d, tau_r10, tau_r10, tau_r21, tau_r21]
 
-optimizer = Optimizer(target="ISWAP")
-print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling, state))
+    initial_state1 = qtp.rand_ket(3)
+    initial_state2 = qtp.rand_ket(3)
+    state = qtp.tensor(initial_state1, initial_state2)
+    state = state*state.dag()
+
+    optimizer = Optimizer(target="CPHASE", tau=tau, master=True)
+    print(optimizer.get_fidelity(omega1, delta1, omega2, delta2, coupling, state))

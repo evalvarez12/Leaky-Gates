@@ -1,34 +1,47 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
+import qutip as qtp
 import master_optimize as moptimize
 import optimize
 import operations
 
+
 # ------------------ 2D heatmap --------------------------
 ###########################################################
-N = 25
-
-omega1 = 5.5 * 2 * np.pi
-omega2 = omega1
-coupling = 0.2 * 2 * np.pi
-
-data = np.zeros((N, N))
-delta = np.linspace(0, 10.*coupling, N)
-
-
-optimizer = optimize.Optimizer(target="ISWAP")
-
-for i in range(N):
-    for j in range(N):
-        data[i, j] = optimizer.get_fidelity(omega1, delta[i], omega1, delta[j], coupling)
-    print(i)
-
-np.save("data/cmap_iswap_fig4.npy", data)
-
-plt.clf()
-plt.imshow(data, origin='lower',  cmap='hot')
-plt.show()
+# N = 25
+#
+# omega1 = 5.5 * 2 * np.pi
+# omega2 = omega1
+# coupling = 0.2 * 2 * np.pi
+#
+# data = np.zeros((N, N))
+# delta = np.linspace(0.0001, 10.*coupling, N)
+#
+# tau_d = .4188
+# tau_r10 = .31
+# tau_r21 = .155
+# tau = [tau_d, tau_d, tau_r10, tau_r10, tau_r21, tau_r21]
+#
+#
+# initial_state1 = qtp.rand_ket(3)
+# initial_state2 = qtp.rand_ket(3)
+# state = qtp.tensor(initial_state1, initial_state2)
+# state = state*state.dag()
+#
+# optimizer = optimize.Optimizer(target="ISWAP", tau=tau, master=True)
+#
+# for i in range(N):
+#     for j in range(N):
+#         data[i, j] = optimizer.get_fidelity(omega1, delta[i], omega2, delta[j], coupling, state)
+#     print(i)
+#
+# # np.save("data/cmap_iswap_fig4_iswap_MASTER.npy", data)
+#
+# plt.clf()
+# plt.imshow(data, origin='lower',  cmap='hot')
+# plt.colorbar()
+# plt.show()
 
 ##########################################################
 # omega1 = 5.5 * 2 * np.pi
@@ -87,3 +100,16 @@ plt.show()
 #
 # plt.plot(theta2, data, '-')
 # plt.show()
+
+############################################################
+data  = np.load("data/cmap_fig4_cphase.npy")
+extent = 5
+plt.clf()
+
+plt.title("CPHASE")
+plt.xlabel(r"$\Delta_B / g$")
+plt.ylabel(r"$\Delta_A / g$")
+
+plt.imshow(data, origin='lower',  cmap='hot', extent=[0,extent, 0, extent])
+plt.colorbar()
+plt.show()
